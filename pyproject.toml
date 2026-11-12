@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flash-attention"
+version = "0.1.0"
+description = "Hardware-aware FlashAttention-2 implementation in OpenAI Triton"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.2.0",
+    "triton>=2.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "matplotlib>=3.7",
+    "pandas>=2.0",
+    "tabulate>=0.9",
+    "ruff>=0.17.5",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+src = ["src", "."]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["flash_attention"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu132" }
+triton = { index = "pytorch-cu132" }
+
+[[tool.uv.index]]
+name = "pytorch-cu132"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
