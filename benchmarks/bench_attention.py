@@ -1,16 +1,18 @@
-import math
 import torch
 import torch.nn.functional as F
 import triton
 import triton.testing
 from tabulate import tabulate
-from flash_attention.reference import attention_ref, flash_attention_v2_tiled_ref
+
+from flash_attention.reference import attention_ref
+
 
 def compute_attention_tflops(
     b: int, h_q: int, n_q: int, n_k: int, d: int, causal: bool, latency_ms: float
 ) -> float:
     """
-    Computes effective TFLOPS/s following the official FlashAttention-2 paper convention:
+    Computes effective TFLOPS/s following the
+    official FlashAttention-2 paper convention:
     - Forward Matmul 1 (Q @ K^T): 2 * B * H_q * N_q * N_k * D
     - Forward Matmul 2 (P @ V):   2 * B * H_q * N_q * N_k * D
     Total = 4 * B * H_q * N_q * N_k * D (halved if causal).
@@ -32,7 +34,9 @@ def measure_peak_memory_and_latency(fn, *args, **kwargs):
         peak_mem_mb = torch.cuda.max_memory_allocated() / (1024**2)
 
         # L2-cache-flushed benchmark via Triton's testing harness
-        ms = triton.testing.do_bench(lambda: fn(*args, **kwargs), quantiles=[0.5, 0.2, 0.8])
+        ms = triton.testing.do_bench(
+            lambda: fn(*args, **kwargs), quantiles=[0.5, 0.2, 0.8]
+        )
         median_ms = ms[0]
         return peak_mem_mb, median_ms
     except torch.cuda.OutOfMemoryError:
@@ -84,15 +88,17 @@ def run_baseline_suite():
         mem_sdpa_str = f"{mem_sdpa:.1f} MB" if mem_sdpa is not None else "OOM"
         ms_sdpa_str = f"{ms_sdpa:.3f} ms" if ms_sdpa is not None else "OOM"
 
-        rows.append([
-            n,
-            mem_eager_str,
-            ms_eager_str,
-            tflops_eager,
-            mem_sdpa_str,
-            ms_sdpa_str,
-            tflops_sdpa,
-        ])
+        rows.append(
+            [
+                n,
+                mem_eager_str,
+                ms_eager_str,
+                tflops_eager,
+                mem_sdpa_str,
+                ms_sdpa_str,
+                tflops_sdpa,
+            ]
+        )
 
         del q, k, v
         torch.cuda.empty_cache()
